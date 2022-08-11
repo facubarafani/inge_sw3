@@ -50,3 +50,4 @@ Intentar subir el cambio, haciendo un commit y push. Mostrar el error que se obt
 - Resolver los conflictos del código.
 - Explicar las versiones LOCAL, BASE y REMOTE.
 - Pushear el cambio mergeado.
+
