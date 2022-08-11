@@ -38,3 +38,43 @@ Lista completa: https://git-scm.com/downloads/guis/
 **Que es un pull request?**
 
 Un pull request es una herramienta de colaboración que permite a los autores de un fork solicitar permiso al propietario de un repositorio para poder combinar los cambios realizados a una rama en especifico.
+
+### 5) Mergear código con conflictos
+
+- Clonar en un segundo directorio el repositorio creado en github.
+- En el clon inicial, modificar el Readme.md agregando más texto.
+- Hacer commit y subir el cambio a master a github.
+- En el segundo clon también agregar texto, en las mismas líneas que se modificaron el punto anterior.
+Intentar subir el cambio, haciendo un commit y push. Mostrar el error que se obtiene.
+- Hacer pull y mergear el código (solo texto por ahora), mostrar la herramienta de mergeo como luce.
+- Resolver los conflictos del código.
+- Explicar las versiones LOCAL, BASE y REMOTE.
+- Pushear el cambio mergeado.
+
+1) Primero creamos la rama con el primer cambio en el archivo:
+
+![Imagen 1](./src/ex5.1.png)
+
+2) Luego creamos una segunda rama donde hagamos un cambio que vaya a generar un conflicto cuando vayamos a realizar el merge:
+
+![Imagen 2](./src/ex5.2.png)
+
+En este caso podemos observar que en una rama tenemos "ESTO VA A GENERAR CONFLICTO" y en la otra contiene "PROBANDO QUE ESTO VA A GENERAR CONFLICTO"
+
+3) Ahora intentamos realizar el merge:
+
+![Imagen 3](./src/ex5.3.png)
+
+y esto es lo que sucede:
+
+![Imagen 4](./src/ex5.4.png)
+
+la terminal nos indica que hay un conflicto y que primero debemos resolverlo para poder realizar el push al remoto.
+
+4) Ingresando al VS Code podemos hacer un analisis de el conflicto generado y que es lo que lo esta generando:
+
+![Imagen 5](./src/ex5.5.png)
+
+![Imagen 6](./src/ex5.6.png)
+
+5) Finalmente corregimos el conflicto y hacemos el push con los cambios. :heavy_check_mark:
