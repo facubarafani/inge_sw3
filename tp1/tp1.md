@@ -78,3 +78,16 @@ la terminal nos indica que hay un conflicto y que primero debemos resolverlo par
 ![Imagen 6](./src/ex5.6.png)
 
 5) Finalmente corregimos el conflicto y hacemos el push con los cambios. :heavy_check_mark:
+
+6) Algunos ejercicios online
+- Entrar a la página https://learngitbranching.js.org/
+- Completar los ejercicios Introduction Sequence
+- Opcional - Completar el resto de los ejercicios para ser un experto en Git!!!
+
+![Imagen 6](./src/ex6.png)
+
+7) Crear Repositorio de la materia
+- Crear un repositorio para la materia en github. Por ejemplo ing-software-3
+- Subir archivo(s) .md con los resultados e imágenes de este trabajo práctico. Puede ser en una subcarpeta trabajo-practico-01
+
+:heavy_check_mark:
