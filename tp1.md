@@ -38,3 +38,18 @@ Lista completa: https://git-scm.com/downloads/guis/
 **Que es un pull request?**
 
 Un pull request es una herramienta de colaboración que permite a los autores de un fork solicitar permiso al propietario de un repositorio para poder combinar los cambios realizados a una rama en especifico.
+
+
+### 5) Mergear código con conflictos
+
+- Clonar en un segundo directorio el repositorio creado en github.
+- En el clon inicial, modificar el Readme.md agregando más texto.
+- Hacer commit y subir el cambio a master a github.
+- En el segundo clon también agregar texto, en las mismas líneas que se modificaron el punto anterior.
+Intentar subir el cambio, haciendo un commit y push. Mostrar el error que se obtiene.
+- Hacer pull y mergear el código (solo texto por ahora), mostrar la herramienta de mergeo como luce.
+- Resolver los conflictos del código.
+- Explicar las versiones LOCAL, BASE y REMOTE.
+- Pushear el cambio mergeado.
+
+ESTO VA A GENERAR CONFLICTO
