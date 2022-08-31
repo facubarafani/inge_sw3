@@ -194,10 +194,256 @@ Tanto `vote`  como `result`  se encuentran en las networks `front-tier` y `back-
 
 * Exponer más puertos para ver la configuración de Redis, y las tablas de PostgreSQL con alguna IDE como dbeaver.
 
+![Imagen 6](./src/ex5.png)
+
 * Revisar el código de la aplicación Python `example-voting-app\vote\app.py` para ver como envía votos a Redis.
+
+![Imagen 6](./src/ex5.1.png)
+
+![Imagen 6](./src/ex5.2.png)
 
 * Revisar el código del worker `example-voting-app\worker\src\main\java\worker\Worker.java` para entender como procesa los datos.
 
+```java
+package worker;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.exceptions.JedisConnectionException;
+import java.sql.*;
+import org.json.JSONObject;
+
+class Worker {
+  public static void main(String[] args) {
+    try {
+      Jedis redis = connectToRedis("redis");
+      Connection dbConn = connectToDB("db");
+
+      System.err.println("Watching vote queue");
+
+      while (true) {
+        String voteJSON = redis.blpop(0, "votes").get(1);
+        JSONObject voteData = new JSONObject(voteJSON);
+        String voterID = voteData.getString("voter_id");
+        String vote = voteData.getString("vote");
+
+        System.err.printf("Processing vote for '%s' by '%s'\n", vote, voterID);
+        updateVote(dbConn, voterID, vote);
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+      System.exit(1);
+    }
+  }
+
+  static void updateVote(Connection dbConn, String voterID, String vote) throws SQLException {
+    PreparedStatement insert = dbConn.prepareStatement(
+      "INSERT INTO votes (id, vote) VALUES (?, ?)");
+    insert.setString(1, voterID);
+    insert.setString(2, vote);
+
+    try {
+      insert.executeUpdate();
+    } catch (SQLException e) {
+      PreparedStatement update = dbConn.prepareStatement(
+        "UPDATE votes SET vote = ? WHERE id = ?");
+      update.setString(1, vote);
+      update.setString(2, voterID);
+      update.executeUpdate();
+    }
+  }
+
+  static Jedis connectToRedis(String host) {
+    Jedis conn = new Jedis(host);
+
+    while (true) {
+      try {
+        conn.keys("*");
+        break;
+      } catch (JedisConnectionException e) {
+        System.err.println("Waiting for redis");
+        sleep(1000);
+      }
+    }
+
+    System.err.println("Connected to redis");
+    return conn;
+  }
+
+  static Connection connectToDB(String host) throws SQLException {
+    Connection conn = null;
+
+    try {
+
+      Class.forName("org.postgresql.Driver");
+      String url = "jdbc:postgresql://" + host + "/postgres";
+
+      while (conn == null) {
+        try {
+          conn = DriverManager.getConnection(url, "postgres", "postgres");
+        } catch (SQLException e) {
+          System.err.println("Waiting for db");
+          sleep(1000);
+        }
+      }
+
+      PreparedStatement st = conn.prepareStatement(
+        "CREATE TABLE IF NOT EXISTS votes (id VARCHAR(255) NOT NULL UNIQUE, vote VARCHAR(255) NOT NULL)");
+      st.executeUpdate();
+
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+      System.exit(1);
+    }
+
+    System.err.println("Connected to db");
+    return conn;
+  }
+
+  static void sleep(long duration) {
+    try {
+      Thread.sleep(duration);
+    } catch (InterruptedException e) {
+      System.exit(1);
+    }
+  }
+}
+
+```
+
+> Realiza la conexión con la base de datos redis haciendo uso del framework `Jedis`. Al tener 
+```Java
+while (true)
+```
+> entra en un bucle constante donde se ejecuta lo siguiente: 1. trae los `votes` de la tabla y genera un archivo `.json` con todos los votes y obtiene el `voteID` y el `vote` y los almacena para poder hacer uso en Java e implementar logica.
+> 2. Luego llama a `updateVote` el cual basicamente corre la siguiente consulta:
+```sql
+INSERT INTO votes (id, vote) VALUES (?, ?)
+```
+> la cual inserta el nuevo voto en la base de datos.
+
 * Revisar el código de la aplicacion que muestra los resultados `example-voting-app\result\server.js` para entender como muestra los valores.
 
+```js
+var express = require('express'),
+    async = require('async'),
+    pg = require('pg'),
+    { Pool } = require('pg'),
+    path = require('path'),
+    cookieParser = require('cookie-parser'),
+    bodyParser = require('body-parser'),
+    methodOverride = require('method-override'),
+    app = express(),
+    server = require('http').Server(app),
+    io = require('socket.io')(server);
+
+io.set('transports', ['polling']);
+
+var port = process.env.PORT || 4000;
+
+io.sockets.on('connection', function (socket) {
+
+  socket.emit('message', { text : 'Welcome!' });
+
+  socket.on('subscribe', function (data) {
+    socket.join(data.channel);
+  });
+});
+
+var pool = new pg.Pool({
+  connectionString: 'postgres://postgres:postgres@db/postgres'
+});
+
+async.retry(
+  {times: 1000, interval: 1000},
+  function(callback) {
+    pool.connect(function(err, client, done) {
+      if (err) {
+        console.error("Waiting for db");
+      }
+      callback(err, client);
+    });
+  },
+  function(err, client) {
+    if (err) {
+      return console.error("Giving up");
+    }
+    console.log("Connected to db");
+    getVotes(client);
+  }
+);
+
+function getVotes(client) {
+  client.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote', [], function(err, result) {
+    if (err) {
+      console.error("Error performing query: " + err);
+    } else {
+      var votes = collectVotesFromResult(result);
+      io.sockets.emit("scores", JSON.stringify(votes));
+    }
+
+    setTimeout(function() {getVotes(client) }, 1000);
+  });
+}
+
+function collectVotesFromResult(result) {
+  var votes = {a: 0, b: 0};
+
+  result.rows.forEach(function (row) {
+    votes[row.vote] = parseInt(row.count);
+  });
+
+  return votes;
+}
+
+app.use(cookieParser());
+app.use(bodyParser());
+app.use(methodOverride('X-HTTP-Method-Override'));
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS");
+  next();
+});
+
+app.use(express.static(__dirname + '/views'));
+
+app.get('/', function (req, res) {
+  res.sendFile(path.resolve(__dirname + '/views/index.html'));
+});
+
+server.listen(port, function () {
+  var port = server.address().port;
+  console.log('App running on port ' + port);
+});
+```
+> El codigo levanta la base de datos de Postgres y corre la siguiente sentencia: 
+
+```SQL
+SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote
+```
+
+donde lo que sucede es que trae el conteo de la cantidad de ids de la tabla votes, basicamente la cantidad de votos que hay y los agrupa por votos y luego son almacenados en la variable `votes` y ahi es `collectVotesFromResult()` el encargado de mostrarlos.
+
 * Escribir un documento de arquitectura sencillo, pero con un nivel de detalle moderado, que incluya algunos diagramas de bloques, de sequencia, etc y descripciones de los distintos componentes involucrados es este sistema y como interactuan entre sí.
+
+> Comenzamos con un diagrama para poder comprender la estructura general del proyecto:
+
+![Imagen 7](./src/ex6.png)
+
+> Consta de un worker desarrollado en .NET el cual es el encargado de "orquestar" a los distintos componentes que componen a la webapp.
+
+> Todo esto es posible gracias al archivo `docker-compose-javaworker.yml` el cual realiza la definición de los distintos puertos, redes gracias a el uso de docker network y tambien hace la definición de los "volumenes" y conexiones a la base de datos tanto para redis y PostgresSQL a partir de contenedores que contienen las imagenes de esos motores de BD.
+
+> A el proyecto lo podemos dividir en dos partes:
+
+> 1) Una sección de votaciones la cual utiliza como base de datos redis y para la lógica de la integración de la misma python, esto se encuentra definido en el archivo `app.py`, y luego en el archivo `index.html` dentro del directorio `/vote` es el encargado de la sección visual de la misma. Esta webapp va a ser la encargada de gestionar la realización de votos dentro de la webapp.
+
+> 2) Finalmente, tenemos una sección de resultados la cual se sostiene en un motor de DB PostgresSQL y nodeJS para la interconexión entre la DB y la webapp. En el caso de la webapp para la vista de resultados la lógica esta integrada en el archivo `app.js` dentro del directorio `/result` y la vista `index.html`.
+
+## Diagrama de secuencia
+
+![Imagen 7](./src/sequence_diagram_ingesw3.png)
+
+> En resumen el funcionamiento es de la siguiente forma, el usuario al ingresar al `vote` app, lo que se nos muestra en pantalla es el archivo `index.html` que se encuentra en el directorio `/vote`, en caso de realizar un voto se hace una petición la cual es receptada por el archivo `app.py` la cual almacena el registro en la DB redis, la cual es integrada tambien por el `Worker` para ser almacenada en la DB `PostgresSQL` la cual se va a encargar de mostrar los resultados cuando ingresemos a la `result` app.
+
+> Es decir que al ingresar a la `result` app lo que se nos muestra en pantalla graficamente es el archivo `index.html` que se encuentra en el directorio `/result` la cual al ingresar realiza una petición `GET` la cual es manejada por `server.js` la cual va a realizar la consulta a la base de datos `PostgresSQL` la cual va a encargarse de retornar y luego mostrar los resultados en pantalla.

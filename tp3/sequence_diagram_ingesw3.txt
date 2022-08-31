@@ -1,0 +1,35 @@
+title Diagrama de Secuencia - Voting App
+
+actor User
+participant UI Interface(vote/index.html)
+participant UIInterface(result/index.html)
+participant vote
+participant result
+participant redis
+participant postgresSQL
+participant Worker
+
+User->UI Interface(vote/index.html): POST submit(option)
+
+UI Interface(vote/index.html)->vote: hello() (POST function that handles the "make vote" use case)
+vote->redis: get_redis()
+redis->redis:get_redis()
+redis-->vote: response(error, Void)
+redis-->redis: addVote()
+redis->Worker: SaveVote(object sender, MsgHandlerEventArgs e)
+Worker->Worker: SaveVote()
+Worker-->postgresSQL: saveVote
+postgresSQL->Worker: confirmStorage()
+Worker-->redis: response
+redis-->vote: response(error, Void)
+vote-->UI Interface(vote/index.html): response
+UI Interface(vote/index.html)-->User: displayReceivedVoteDialog()
+
+User-> UIInterface(result/index.html): GET getVotes(client)
+
+UIInterface(result/index.html)-> result: getVotes(client)
+
+result-> postgresSQL: SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote
+postgresSQL-->result: response
+result--> UIInterface(result/index.html): response
+UIInterface(result/index.html)-->User: displayVotes()
