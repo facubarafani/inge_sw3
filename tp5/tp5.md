@@ -32,11 +32,22 @@
 
 #### 3- Introducción a Maven
 - Qué es Maven?
+>  Como lo dice el sitio `https://maven.apache.org/` es una herramienta de software para el manejo y comprehension de proyectos. Este esta basado en el concepto de un modelo de objeto de proyecto (Project Object Model), Maven puede manejar los "builds" del proyecto, reporte y documentacion desde una pieza central de información.
 - Qué es el archivo POM?
+> POM o modelo objeto de proyecto es una unidad fundamental de trabajo en Maven. Este es un archivo XML que contiene información acerca del proyecto y los detalles de configuración que utiliza Maven para "buildear" el proyecto. Contiene valores por defecto para la mayoría de proyectos.
+
     1. modelVersion
+ > Hace referencia a la versión del "descriptor" del proyecto. Por ejemplo, versión 4.0 hace referencia a que requiere mínimo una v3 de Maven.
+    
     2. groupId
+> Un nombre base unico de la compañia o grupo que haya creado el proyecto.
+
     3. artifactId
+> Nombre único del proyecto.
+
     4. versionId
+> Indica la versión del proyecto.
+
 - Repositorios Local, Central y Remotos http://maven.apache.org/guides/introduction/introduction-to-repositories.html
 - Entender Ciclos de vida de build
   - default
@@ -113,12 +124,30 @@ mvn archetype:generate -DgroupId=ar.edu.ucc -DartifactId=ejemplo -DarchetypeArti
 ```bash
 mvn clean package
 ```
+> Al intentar compilar surgio el siguiente error:
+
+![test](./src/ex1.png)
+
+> El mismo se solucionó agregando al archivo `pom.xml` lo siguiente: 
+
+```xml
+<properties> 
+<maven.compiler.source>1.8</maven.compiler.source>
+<maven.compiler.target>1.8</maven.compiler.target>
+</properties>
+```
+
+![test](./src/ex1.1.png)
 
 - Analizar la salida del comando anterior y luego ejecutar el programa
+
+> El compilar genera la clase App.js y distintos archivos dentro del directorio `target`. A su vez instala la dependencia `surefire`.
 
 ```
 java -cp target/ejemplo-1.0-SNAPSHOT.jar ar.edu.ucc.App
 ```
+
+![test](./src/ex2.png)
 
 #### 6- Manejo de dependencias
 
@@ -148,6 +177,10 @@ public class App
 
 - Compilar el código e identificar el problema.
 
+![test](./src/ex3.png)
+
+> El programa no compila ya que no detecta la libreria que se esta intentando importar `org.slf4j` ya que no esta agregado como dependencia en el archivo `pom.xml`.
+
 - Agregar la dependencia necesaria al pom.xml
 
 ```xml
@@ -157,21 +190,55 @@ public class App
       <version>1.2.1</version>
     </dependency>
 ```
-
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>ar.edu.ucc</groupId>
+  <artifactId>ejemplo</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0-SNAPSHOT</version>
+  <name>ejemplo</name>
+  <url>http://maven.apache.org</url>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.2.1</version>
+    </dependency>
+  </dependencies>
+  <properties> 
+   <maven.compiler.source>1.8</maven.compiler.source>
+   <maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
+</project>
+```
 - Verificar si se genera el archivo jar y ejecutarlo
 
 ```bash
 java -cp target\ejemplo-uber-jar-1.0-SNAPSHOT.jar ar.edu.ucc.App
 ```
 
+![test](./src/ex5.png)
+
 - Sacar conclusiones y analizar posibles soluciones
 
-- Ahora, cjecutar la clase con el siguiente comando (en windows reemplazar `$HOME` por `%USERPROFILE%`, y separar por `;` en lugar de `:`)
+> Pensar que se puede poner aca
+
+- Ahora, ejecutar la clase con el siguiente comando (en windows reemplazar `$HOME` por `%USERPROFILE%`, y separar por `;` en lugar de `:`)
 ```bash
  java -cp target/ejemplo-uber-jar-1.0-SNAPSHOT.jar:$HOME/.m2/repository/org/slf4j/slf4j-api/1.7.22/slf4j-api-1.7.22.jar:$HOME/.m2/repository/ch/qos/logback/logback-classic/1.2.1/logback-classic-1.2.1.jar:$HOME/.m2/repository/ch/qos/logback/logback-core/1.2.1/logback-core-1.2.1.jar ar.edu.ucc.App
 ```
 
 - Verificar que ahora resueltos los classpath la aplicación muestra el mensaje correcto
+
+![test](./src/ex5.1.png)
 
 - Implementar la opción de uber-jar: https://maven.apache.org/plugins/maven-shade-plugin/
 
