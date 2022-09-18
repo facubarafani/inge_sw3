@@ -655,8 +655,11 @@ HEALTHCHECK --interval=1m --timeout=3s CMD wget -q -T 3 -s http://localhost:8080
 
 > Luego crea el directorio `/app` dentro del contenedor y copia los archivos ejecutables de java(.jar) en el nuevo directorio creado previamente.
 
-> Aparece una nueva instrucción la cual es `ENV`, esta lo que hace es
+> Aparece una nueva instrucción la cual es `ENV`, esta lo que hace es definir variables de el entorno dentro de el contenedor, en este caso define una variable de entorno de Java.
 
+> En la sección del `ENTRYPOINT` lo que se hace es definir el ejecutable que se va a ejecutar cada vez que inicializemos el contenedor.
+
+> Luego el comando `HEALTCHECK` que sirve para estar al tanto de el estado de el contenedor, este lo va a realizar cada un intervalo de un minuto y con un timeout de 3s, para la validación verifica que el puerto `8080` del localhost este disponible.
 
 
 #### 4- Python Flask
@@ -669,6 +672,87 @@ docker-compose up -d
 ```
   - Explicar que sucedió!
   - ¿Para qué está la key `build.context` en el docker-compose.yml?
+
+  > Al correr el comando surgió el siguiente error:
+
+  ```bash
+  facundobarafani@Facundos-MBP python-flask % docker-compose up -d
+Creating network "python-flask_default" with the default driver
+Creating volume "python-flask_redis_data" with default driver
+Pulling redis (redis:3.2-alpine)...
+3.2-alpine: Pulling from library/redis
+4fe2ade4980c: Already exists
+fb758dc2e038: Pulling fs layer
+fb758dc2e038: Downloading [==============================>                    ] fb758dc2e038: Downloading [==================================================>] fb758dc2e038: Download complete
+fb758dc2e038: Extracting [==================================================>]  fb758dc2e038: Extracting [==================================================>]   1.25kB/1.25kBMB
+fb758dc2e038: Pull complete
+989f7b0c858b: Extracting [====>                                              ]  32.77kB/402.1kB
+989f7b0c858b: Extracting [============================>                      ]  229.4kB/402.1kBB
+989f7b0c858b: Extracting [==================================================>]  989f7b0c858b: Pull complete
+42b4b9f869ad: Pull complete
+17e06138ef20: Pull complete
+c0ecd66db81e: Pull complete
+Digest: sha256:e9083e10f5f81d350a3f687d582aefd06e114890b03e7f08a447fa1a1f66d967
+Status: Downloaded newer image for redis:3.2-alpine
+Building app
+[+] Building 9.1s (9/9) FINISHED                                                                                                                                                                            
+ => [internal] load build definition from Dockerfile                                                                                                                                                   0.0s
+ => => transferring dockerfile: 362B                                                                                                                                                                   0.0s
+ => [internal] load .dockerignore                                                                                                                                                                      0.0s
+ => => transferring context: 135B                                                                                                                                                                      0.0s
+ => [internal] load metadata for docker.io/library/python:3.6.3                                                                                                                                        2.8s
+ => [1/4] FROM docker.io/library/python:3.6.3@sha256:cdef88d8625cf50ca705b7abfe99e8eb33b889652a9389b017eb46a6d2f1aaf3                                                                                  0.1s
+ => => resolve docker.io/library/python:3.6.3@sha256:cdef88d8625cf50ca705b7abfe99e8eb33b889652a9389b017eb46a6d2f1aaf3                                                                                  0.0s
+ => => sha256:cdef88d8625cf50ca705b7abfe99e8eb33b889652a9389b017eb46a6d2f1aaf3 3.08kB / 3.08kB                                                                                                         0.0s
+ => => sha256:a8f7167de3124163e52162d5c690b1daa49e7f88e674bf68d479efa3685713a2 7.41kB / 7.41kB                                                                                                         0.0s
+ => => sha256:c310c5ee28033070a27d57fd1a896045323d88e2e4cff9615b3c11dab16b5a2b 2.01kB / 2.01kB                                                                                                         0.0s
+ => [internal] load build context                                                                                                                                                                      0.0s
+ => => transferring context: 833B                                                                                                                                                                      0.0s
+ => [2/4] COPY ./requirements.txt /requirements.txt                                                                                                                                                    0.0s
+ => [3/4] RUN pip install -r /requirements.txt                                                                                                                                                         5.8s
+ => [4/4] COPY ./app.py /app.py                                                                                                                                                                        0.0s
+ => exporting to image                                                                                                                                                                                 0.2s
+ => => exporting layers                                                                                                                                                                                0.1s
+ => => writing image sha256:8b0e5b193b10a759cb8ac3b8cdd1b23b84361bc769fd5123a533e08ccc6ef138                                                                                                           0.0s 
+ => => naming to docker.io/library/python-flask_app                                                                                                                                                    0.0s 
+WARNING: Image for service app was built because it did not already exist. To rebuild this image you must use `docker-compose build` or `docker-compose up --build`.                                        
+Creating python-flask_redis_1 ... done
+Creating python-flask_app_1   ... error
+
+ERROR: for python-flask_app_1  Cannot start service app: Ports are not available: listen tcp 0.0.0.0:5000: bind: address already in use
+
+ERROR: for app  Cannot start service app: Ports are not available: listen tcp 0.0.0.0:5000: bind: address already in use
+ERROR: Encountered errors while bringing up the project.
+
+```
+
+> Esto se debe a que Flask intenta correr en el puerto 5000 pero esto no es de uso para el usuario en macOS superior a la versión Mojave, es por esto que se cambio en el archivo `yml` del docker-compose por el puerto 5001.
+
+> El docker-compose en este caso esta vinculado al Dockerfile que se encuentra en el mismo directorio, para esto existe la key `build.context`, para definir la ubicación del `Dockerfile`, el cual en este caso contiene lo siguiente:
+
+```dockerfile
+FROM python:3.6.3
+
+ENV BIND_PORT 5001
+ENV REDIS_HOST localhost
+ENV REDIS_PORT 6379
+
+COPY ./requirements.txt /requirements.txt
+
+RUN pip install -r /requirements.txt
+
+COPY ./app.py /app.py
+
+EXPOSE $BIND_PORT
+
+CMD [ "python", "/app.py" ]
+```
+
+> Basicamente, hace uso de la imagen de python 3.6, luego define variables de entrono donde define el puerto donde va a correr(en este caso lo tuve que modificar por el 5001), a su vez define el puerto donde va a correr redis, estos son los mismos que los expuestos en el archivo `docker-compose.yml`.
+
+> Luego copia el archivo `requirements.txt` dentro del contenedor, el archivo `requirements.txt` sirve para definir dependencias en python, las cuales son instaladas gracias a la siguiente sentencia `RUN pip install -r /requirements.txt`.
+
+> Finalmente copia el archivo `app.py` el cual es luego ejecutado dentro del contenedor.
 
 #### 5- Imagen para aplicación web en Nodejs
   - Crear una la carpeta `trabajo-practico-06/nodejs-docker`
@@ -683,12 +767,121 @@ docker-compose up -d
   - Verificar en http://localhost:3000 que la aplicación está funcionando.
   - Proveer el Dockerfile y los comandos ejecutados como resultado de este ejercicio.
 
+  ```dockerfile
+  FROM node:13.12.0-alpine AS node_build
+
+# set working directory
+WORKDIR /app
+
+# add `/app/node_modules/.bin` to $PATH
+ENV PATH /app/node_modules/.bin:$PATH
+
+# install app dependencies
+COPY package.json .
+COPY package-lock.json .
+
+RUN npm install
+
+# copy app to container
+COPY . .
+
+EXPOSE 3000
+
+# starts the app
+CMD ["npm", "start"]
+```
+
+```bash
+facundobarafani@Facundos-MBP my-app % docker build -t "test-node" .                
+[+] Building 61.5s (12/12) FINISHED                                                                                                                                                                         
+ => [internal] load build definition from Dockerfile                                                                                                                                                   0.0s
+ => => transferring dockerfile: 307B                                                                                                                                                                   0.0s
+ => [internal] load .dockerignore                                                                                                                                                                      0.0s
+ => => transferring context: 2B                                                                                                                                                                        0.0s
+ => [internal] load metadata for docker.io/library/node:13.12.0-alpine                                                                                                                                 2.4s
+ => [auth] library/node:pull token for registry-1.docker.io                                                                                                                                            0.0s
+ => [1/6] FROM docker.io/library/node:13.12.0-alpine@sha256:cc85e728fab3827ada20a181ba280cae1f8b625f256e2c86b9094d9bfe834766                                                                           0.0s
+ => [internal] load build context                                                                                                                                                                      2.6s
+ => => transferring context: 3.10MB                                                                                                                                                                    2.5s
+ => CACHED [2/6] WORKDIR /app                                                                                                                                                                          0.0s
+ => CACHED [3/6] COPY package.json .                                                                                                                                                                   0.0s
+ => [4/6] COPY package-lock.json .                                                                                                                                                                     0.0s
+ => [5/6] RUN npm install                                                                                                                                                                             35.4s
+ => [6/6] COPY . .                                                                                                                                                                                     9.2s 
+ => exporting to image                                                                                                                                                                                11.8s 
+ => => exporting layers                                                                                                                                                                               11.8s 
+ => => writing image sha256:3aa1638aaf7d6e5199058429c6d7d6bcf5401a5a242c8d2f1eb00a5c04d26c7f                                                                                                           0.0s 
+ => => naming to docker.io/library/test-node                                                                                                                                                           0.0s 
+facundobarafani@Facundos-MBP my-app % docker run -dp 3000:3000 test-node      
+5794a7666abb5e456573e17522058d39d0364e0d789e291c77b4901a663cc8d4
+```
+
+![](./src/ex5.png)
+
+### Multistaging
+
+```dockerfile
+FROM node:13.12.0-alpine AS node_build
+
+# set working directory
+WORKDIR /app
+
+# add `/app/node_modules/.bin` to $PATH
+ENV PATH /app/node_modules/.bin:$PATH
+
+# install app dependencies
+COPY package.json .
+COPY package-lock.json .
+
+RUN npm install
+
+# copy app to container
+COPY . .
+
+EXPOSE 3001
+
+# starts the app
+CMD ["npm", "start"]
+
+FROM node:13.12.0-alpine AS node_prod
+
+# set working directory
+WORKDIR /app
+
+# add `/app/node_modules/.bin` to $PATH
+ENV PATH /app/node_modules/.bin:$PATH
+
+# install app dependencies
+COPY package.json .
+COPY package-lock.json .
+
+RUN npm install
+
+# copy app to container
+COPY . .
+
+EXPOSE 3000
+
+# starts the app
+CMD ["npm", "start"]
+```
+
 #### 6- Publicar la imagen en Docker Hub.
   - Crear una cuenta en Docker Hub si no se dispone de una.
   - Registrase localmente a la cuenta de Docker Hub:
 ```bash
 docker login
 ```
+
+```bash
+facundobarafani@Facundos-MBP my-app % docker login
+Authenticating with existing credentials...
+Login Succeeded
+
+Logging in with your password grants your terminal complete access to your account. 
+For better security, log in with a limited-privilege personal access token. Learn more at https://docs.docker.com/go/access-tokens/
+```
+
   - Crear un tag de la imagen generada en el ejercicio 3. Reemplazar <mi_usuario> por el creado en el punto anterior.
 ```bash
 docker tag test-node <mi_usuario>/test-node:latest
@@ -698,3 +891,19 @@ docker tag test-node <mi_usuario>/test-node:latest
 docker push <mi_usuario>/test-node:latest
 ``` 
   - Como resultado de este ejercicio mostrar la salida de consola, o una captura de pantalla de la imagen disponible en Docker Hub.
+
+```bash
+facundobarafani@Facundos-MBP my-app % docker push facubarafani/test-node:latest
+The push refers to repository [docker.io/facubarafani/test-node]
+61b97979c6f8: Pushed 
+7d2d770aef10: Pushed 
+34b31ce5dcc5: Pushed 
+4d5729b95eca: Pushed 
+89f7fdf31591: Pushed 
+65d358b7de11: Mounted from library/node 
+f97384e8ccbc: Mounted from library/node 
+d56e5e720148: Mounted from library/node 
+beee9f30bc1f: Mounted from library/node 
+latest: digest: sha256:ae8d2c0240d3129a69efeae7952268efb88cc1c4ea7c290b7d0b7cfb97a17a38 size: 2206
+```
+![](./src/ex6.png)
