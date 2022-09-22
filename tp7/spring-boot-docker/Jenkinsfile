@@ -1,0 +1,71 @@
+// Sets global variable for using docker image
+// in multiple stages (build & prod)
+def newImage
+
+pipeline {
+    agent any
+
+    tools {
+        // Install the Maven version configured as "M3" and add it to the path.
+         maven "M3"
+    }
+    stages {
+
+        stage('Build') {
+             steps {
+                // Get spring-boot folder from github repo
+                git 'https://github.com/facubarafani/inge_sw3'
+                    
+                 dir('tp6/spring-boot') {
+                     sh("mvn package")
+                }
+            }
+            post {
+                 // If Maven was able to run the tests, even if some of the test
+                 // failed, record the test results and archive the jar file.
+                success {
+                    dir('tp6/spring-boot') {
+                         archiveArtifacts 'target/*.jar'
+                    }
+                }
+            }
+        }
+        stage("Docker Image Build") {
+            steps {
+                dir('tp6/spring-boot') {
+                    script {
+                        // Builds new docker image named 'facubarafani/spring-boot-jenkins'
+                        newImage = docker.build("facubarafani/spring-boot-jenkins:${env.BUILD_ID}")
+                    }
+                }
+            }
+         }
+        stage("Docker Image Test") {
+             steps {
+                 script {
+                     newImage.inside {
+                         sh('echo "Test passed"')
+                     }
+                 }
+             }
+         }
+         stage("Docker Image Post") {
+            steps {
+                script {
+                    withCredentials([usernamePassword( credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        docker.withRegistry('', 'dockerhub') {
+                        // logins into docker using credentials stored inside Jenkins credentials manager
+                        sh "docker login -u ${USERNAME} -p ${PASSWORD}"
+
+                        // push image built into docker-hub with two tags:
+                        // one with the actual build number (Jenkins job build #)
+                        newImage.push("${env.BUILD_NUMBER}")
+                        // the other one as latest
+                        newImage.push("latest")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

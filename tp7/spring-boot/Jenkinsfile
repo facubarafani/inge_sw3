@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+
+    tools {
+        // Install the Maven version configured as "M3" and add it to the path.
+        maven "M3"
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                // Clones github repo
+                git 'https://github.com/facubarafani/inge_sw3'
+                
+                // sets working directory as `tp6/spring-boot`
+                dir('tp6/spring-boot') {
+                  // executes mvn package -> builds maven project
+                    sh("mvn package")
+                }
+            }
+            post {
+              // if build succeeded
+                success {
+                  // moves back to maven project directory
+                    dir('tp6/spring-boot') {
+                  // archives all .jar files inside `target` directory
+                        archiveArtifacts 'target/*.jar'
+                    }
+                }
+            }
+        }
+    }
+}
