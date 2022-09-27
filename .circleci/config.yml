@@ -17,6 +17,8 @@ jobs:
           command: |
             cd tp6/spring-boot;
             mvn -B package --file pom.xml;
+            cd target;
+            ls;
       - store_artifacts:
           path: /tp6/spring-boot/target/*.jar
 
