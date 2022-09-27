@@ -68,6 +68,8 @@ jobs:
 
   ![](./src/ex2.png)
 
+  ![](./src/ex2.1.png)
+
   > En una primera instancia define situaciones en las que se va a ejecutar la "action": en caso de que se realice algun `push` o `pull-request` dentro del directorio del proyecto `spring-boot`. Lo que hace es lo siguiente:
 
   ```bash
@@ -84,12 +86,98 @@ mvn -B package --file pom.xml
   - Repetir el ejercicio 7 del trabajo práctico [trabajo práctico 7](07-servidor-build.md), pero utilizando GitHub Actions.
   - Generar `secretos` y los `pasos` necesarios para subir la imagen a Docker Hub. [Referencia](https://github.com/actions/starter-workflows/blob/main/ci/docker-publish.yml)
 
+```yml
+name: Build and publish spring-boot docker project
 
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    paths:
+    - 'tp6/spring-boot/**'
+    branches: [ master ]
+  pull_request:
+    paths:
+    - 'tp6/spring-boot/**'  
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+ # This workflow contains a single job called "build"
+  build-maven-project:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Install Java JDK with maven
+      - name: Set up JDK 8
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+          cache: maven
+          
+      # Compile the application
+      - name: Build with Maven
+        run: |
+          cd tp6/spring-boot/
+          mvn -B package --file pom.xml
+
+  # define job to build and publish docker image
+  build-and-push-docker-image:
+    name: Build Docker image and push to repositories
+    # run only when code is compiling and tests are passing
+    runs-on: ubuntu-latest
+
+    # steps to perform in job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # setup Docker buld action
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Build image and push to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          # relative path to the place where source code with Dockerfile is located
+          context: ./tp6/spring-boot/
+          # Note: tags has to be all lower-case
+          tags: |
+            facubarafani/spring-boot-ghactions:latest 
+          # build on feature branches, push only on master branch
+          push: ${{ github.ref == 'refs/heads/master' }}
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+```
+
+![](./src/ex2.2.png)
+
+![](./src/ex2.3.png)
+
+> [Link imagen docker-hub](https://hub.docker.com/repository/docker/facubarafani/spring-boot-ghactions)
 
 #### 4- Opcional: Configurando CircleCI
   - De manera similar al ejercicio 2, configurar un build job para el mismo proyecto, pero utilizando CircleCI
   - Para capturar artefactos, utilizar esta referencia: https://circleci.com/docs/2.0/artifacts/
   - Como resultado de este ejercicio, subir el config.yml a la carpeta **spring-boot**
+
+  
 
 #### 5- Opcional: Configurando TravisCI
   - Configurar el mismo proyecto, pero para TravisCI. No es necesario publicar los artefactos porque TravisCI no dispone de esta funcionalidad.
