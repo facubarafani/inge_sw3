@@ -11,13 +11,13 @@ jobs:
     docker:
       - image: maven:3.5.2-jdk-8-alpine
     # Set working directory to /tmp
-    working_directory: /tp6/spring-boot/
+    working_directory: /tmp
     steps:
       - checkout
       - run:
           name: "Build Maven Project"
           command: |
-            "cd tp6/spring-boot"
+            "cd /tp6/spring-boot"
             "mvn -B package --file pom.xml"
 
 # Invoke jobs via workflows
