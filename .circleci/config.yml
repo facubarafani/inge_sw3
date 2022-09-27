@@ -7,7 +7,6 @@ version: 2.1
 jobs:
   build:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
       - image: maven:3.5.2-jdk-8-alpine
     steps:
@@ -16,7 +15,7 @@ jobs:
           name: "Build Maven Project"
           command: |
             cd tp6/spring-boot;
-            mvn -B package --file pom.xml;
+            mvn package;
             mkdir -p tmp/target/;
             cp target/*.jar tmp/target/;
             
@@ -24,7 +23,6 @@ jobs:
           path: tmp/target/
 
 # Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   build-workflow:
     jobs:
