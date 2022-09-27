@@ -16,11 +16,9 @@ jobs:
           command: |
             cd tp6/spring-boot;
             mvn package;
-            mkdir -p tmp/target/;
-            cp target/*.jar tmp/target/;
             
       - store_artifacts:
-          path: tmp/target/
+          path: tp6/spring-boot/target/*.jar
 
 # Invoke jobs via workflows
 workflows:
