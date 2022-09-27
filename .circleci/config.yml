@@ -21,7 +21,7 @@ jobs:
             cp target/*.jar tmp/target/;
             
       - store_artifacts:
-          path: /tmp/target/
+          path: tmp/target/
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
