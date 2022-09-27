@@ -5,11 +5,11 @@ on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     paths:
-    - 'proyectos/spring-boot/**'
+    - 'tp6/spring-boot/**'
     branches: [ master ]
   pull_request:
     paths:
-    - 'proyectos/spring-boot/**'  
+    - 'tp6/spring-boot/**'  
     branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
@@ -37,7 +37,7 @@ jobs:
       # Compile the application
       - name: Build with Maven
         run: |
-          cd proyectos/spring-boot/
+          cd tp6/spring-boot/
           mvn -B package --file pom.xml
 
   # define job to build and publish docker image
