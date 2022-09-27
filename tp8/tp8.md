@@ -66,9 +66,25 @@ jobs:
   - Guardar el archivo (hacemos commit directamente en GitHub por ejemplo) y ejecutamos manualmente el pipeline.
   - Explicar que realiza el pipeline anterior.
 
+  ![](./src/ex2.png)
+
+  > En una primera instancia define situaciones en las que se va a ejecutar la "action": en caso de que se realice algun `push` o `pull-request` dentro del directorio del proyecto `spring-boot`. Lo que hace es lo siguiente:
+
+  ```bash
+  cd proyectos/spring-boot/
+  ```
+> 1) se mueve al directorio `proyectos/spring-boot`
+> 2) luego ejecuta el siguiente comando:
+  ```bash
+mvn -B package --file pom.xml
+  ```
+> Realiza el build utilizando maven a partir del archivo `pom.xml` que se encuentra en el directorio.
+
 #### 3- Utilizando nuestros proyectos con Docker
   - Repetir el ejercicio 7 del trabajo práctico [trabajo práctico 7](07-servidor-build.md), pero utilizando GitHub Actions.
   - Generar `secretos` y los `pasos` necesarios para subir la imagen a Docker Hub. [Referencia](https://github.com/actions/starter-workflows/blob/main/ci/docker-publish.yml)
+
+
 
 #### 4- Opcional: Configurando CircleCI
   - De manera similar al ejercicio 2, configurar un build job para el mismo proyecto, pero utilizando CircleCI
