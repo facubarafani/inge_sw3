@@ -17,9 +17,11 @@ jobs:
           command: |
             cd tp6/spring-boot;
             mvn -B package --file pom.xml;
+            mkdir -p tmp/target/
+            cp /target/*.jar /tmp/target/
             
       - store_artifacts:
-          path: /tp6/spring-boot/target/
+          path: /tmp/target/
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
