@@ -1,13 +1,45 @@
-name: Build and Publish
+name: Build and publish spring-boot docker project
 
+# Controls when the workflow will run
 on:
-  # run it on push to the default repository branch
+  # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [master]
-  # run it during pull request
+    paths:
+    - 'proyectos/spring-boot/**'
+    branches: [ master ]
   pull_request:
+    paths:
+    - 'proyectos/spring-boot/**'  
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
+ # This workflow contains a single job called "build"
+  build-maven-project:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Install Java JDK with maven
+      - name: Set up JDK 8
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+          cache: maven
+          
+      # Compile the application
+      - name: Build with Maven
+        run: |
+          cd proyectos/spring-boot/
+          mvn -B package --file pom.xml
+
   # define job to build and publish docker image
   build-and-push-docker-image:
     name: Build Docker image and push to repositories
