@@ -177,7 +177,56 @@ jobs:
   - Para capturar artefactos, utilizar esta referencia: https://circleci.com/docs/2.0/artifacts/
   - Como resultado de este ejercicio, subir el config.yml a la carpeta **spring-boot**
 
-  
+```yaml
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/2.0/configuration-reference
+version: 2.1
+
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+jobs:
+  build:
+    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
+    docker:
+      - image: maven:3.5.2-jdk-8-alpine
+    steps:
+      - checkout
+      - run:
+          name: "Build Maven Project"
+          command: |
+            cd tp6/spring-boot/;
+            mvn package;
+            mkdir artifacts;
+            cp target/*.jar /tmp/artifacts
+      - store_artifacts:
+          path: /tmp/artifacts
+  docker-build-push:
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run:
+          name: Build & publish spring-boot Docker Image
+          command: |
+            cd tp6/spring-boot/;
+            docker build -t facubarafani/spring-boot-circleci .;
+            docker login --username $DOCKERHUB_USERNAME --password $DOCKERHUB_PASSWORD;
+            docker push facubarafani/spring-boot-circleci:latest;
+
+
+# Invoke jobs via workflows
+workflows:
+  build-workflow:
+    jobs:
+      - build
+      - docker-build-push
+```
+
+![](./src/ex3.png)
+
+![](./src/ex3.1.png)
 
 #### 5- Opcional: Configurando TravisCI
   - Configurar el mismo proyecto, pero para TravisCI. No es necesario publicar los artefactos porque TravisCI no dispone de esta funcionalidad.
