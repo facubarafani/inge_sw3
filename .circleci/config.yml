@@ -31,7 +31,7 @@ jobs:
           name: Build spring-boot Docker Image
           command: |
             cd tp6/spring-boot/;
-            docker build;
+            docker build -t test-spring-boot .;
 
 
 # Invoke jobs via workflows
