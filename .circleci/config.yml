@@ -4,9 +4,9 @@ version: 2.1
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-working_directory: ~/tp6/spring-boot/
 jobs:
   build:
+    working_directory: ~/tp6/spring-boot/
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     docker:
       - image: maven:3.5.2-jdk-8-alpine
@@ -15,11 +15,10 @@ jobs:
       - run:
           name: "Build Maven Project"
           command: |
-            cd $CIRCLE_WORKING_DIRECTORY;
             mvn package;
             
       - store_artifacts:
-          path: $CIRCLE_WORKING_DIRECTORY/target/*.jar;
+          path: target/*.jar;
 
 # Invoke jobs via workflows
 workflows:
