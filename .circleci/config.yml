@@ -30,7 +30,7 @@ jobs:
       - run:
           name: Build spring-boot Docker Image
           command: |
-            cd /tp6/spring-boot/;
+            cd tp6/spring-boot/;
             docker build;
 
 
