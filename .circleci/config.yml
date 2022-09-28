@@ -20,8 +20,23 @@ jobs:
             cp target/*.jar /tmp/artifacts
       - store_artifacts:
           path: /tmp/artifacts
+  docker-build-push:
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run:
+          name: Build spring-boot Docker Image
+          command: |
+            cd /tp6/spring-boot/;
+            docker build;
+
+
 # Invoke jobs via workflows
 workflows:
   build-workflow:
     jobs:
       - build
+      - docker-build-push
