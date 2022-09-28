@@ -6,17 +6,21 @@ version: 2.1
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
   build:
-    working_directory: ~/tp6/spring-boot/
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     docker:
       - image: maven:3.5.2-jdk-8-alpine
+    working_directory: /tmp
     steps:
       - checkout
       - run:
           name: "Build Maven Project"
           command: |
-            ls;
-
+            cd tp6/spring-boot/;
+            mvn package;
+            mkdir artifacts;
+            cp tp6/spring-boot/target/*.jar /tmp/artifacts
+      - store_artifacts:
+          path: /tmp/artifacts
 # Invoke jobs via workflows
 workflows:
   build-workflow:
