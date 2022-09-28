@@ -28,10 +28,12 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: false
       - run:
-          name: Build spring-boot Docker Image
+          name: Build & publish spring-boot Docker Image
           command: |
             cd tp6/spring-boot/;
             docker build -t test-spring-boot .;
+            echo “$DOCKERHUB_PASSWORD” | docker login -u “$DOCKERHUB_USERNAME” — password-stdin;
+            docker push facubarafani/spring-boot-circleci:latest;
 
 
 # Invoke jobs via workflows
