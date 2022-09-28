@@ -9,7 +9,6 @@ jobs:
     # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     docker:
       - image: maven:3.5.2-jdk-8-alpine
-    working_directory: /tmp
     steps:
       - checkout
       - run:
