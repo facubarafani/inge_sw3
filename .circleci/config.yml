@@ -16,10 +16,6 @@ jobs:
           name: "Build Maven Project"
           command: |
             ls;
-            mvn package;
-            
-      - store_artifacts:
-          path: target/*.jar;
 
 # Invoke jobs via workflows
 workflows:
