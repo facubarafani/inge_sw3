@@ -20,6 +20,16 @@ jobs:
             cp target/*.jar /tmp/artifacts
       - store_artifacts:
           path: /tmp/artifacts
+  test:
+    docker:
+      - image: maven:3.5.2-jdk-8-alpine
+    steps:
+      - checkout
+      - run:
+          name: "Build Maven Project"
+          command: |
+            cd tp6/spring-boot/;
+            mvn -B test;
   docker-build-push:
     docker:
       - image: docker:17.05.0-ce-git
@@ -41,4 +51,5 @@ workflows:
   build-workflow:
     jobs:
       - build
+      - test
       - docker-build-push
