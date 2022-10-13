@@ -12,7 +12,7 @@ exports.config = {
   output: './output',
   helpers: {
 		REST: {
-			endpoint: "http://localhost:8080",
+			endpoint: "http://localhost:8081",
 			onRequest: () => {
 			}
 		}
